@@ -30,7 +30,7 @@ export const primaryNav: NavItem[] = [
   { id: "invoices", label: "Invoices", href: "/invoices", icon: IconInvoice },
   { id: "receipts", label: "Receipts", href: "/receipts", icon: IconScan, badge: 3 },
   { id: "expenses", label: "Expenses", href: "/expenses", icon: IconDollar },
-  { id: "files", label: "Files & Photos", href: "#", icon: IconFolder },
+  { id: "files", label: "Files & Photos", href: "/files", icon: IconFolder },
 ];
 
 export const secondaryNav: NavItem[] = [
