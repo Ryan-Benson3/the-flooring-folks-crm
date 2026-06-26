@@ -25,7 +25,7 @@ export type NavItem = {
 export const primaryNav: NavItem[] = [
   { id: "dashboard", label: "Dashboard", href: "/", icon: IconGrid },
   { id: "jobs", label: "Jobs", href: "#", icon: IconWrench, badge: 3 },
-  { id: "customers", label: "Customers", href: "#", icon: IconUsers },
+  { id: "customers", label: "Customers", href: "/customers", icon: IconUsers },
   { id: "estimates", label: "Estimates", href: "#", icon: IconClipboard, badge: 1 },
   { id: "invoices", label: "Invoices", href: "#", icon: IconInvoice },
   { id: "receipts", label: "Receipts", href: "#", icon: IconScan, badge: 3 },
