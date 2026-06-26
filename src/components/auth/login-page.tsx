@@ -115,7 +115,7 @@ export function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-xs text-ink-600">
-          The Flooring Folks CRM · Phase 3 Preview
+          The Flooring Folks CRM
         </p>
       </div>
     </div>

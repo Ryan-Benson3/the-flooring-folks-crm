@@ -1,6 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/** Routes that don't require authentication. */
+const PUBLIC_ROUTES = ["/login", "/auth/callback"];
+
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/"),
+  );
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -33,12 +42,20 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // During preview phase: don't redirect unauthenticated users.
-  // Auth is wired but we're still in sample-data mode.
-  // TODO: Enable redirect once Phase 3 login is the primary flow.
-  if (user) {
-    // User is signed in — no action needed.
-    // The `user` check prevents the variable from being unused during preview.
+  // Redirect unauthenticated users to /login (except on public routes).
+  if (!user && !isPublicRoute(request.nextUrl.pathname)) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    redirectUrl.searchParams.set("redirect", request.nextUrl.pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Redirect authenticated users away from /login to the dashboard.
+  if (user && request.nextUrl.pathname === "/login") {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    redirectUrl.search = "";
+    return NextResponse.redirect(redirectUrl);
   }
 
   return supabaseResponse;
