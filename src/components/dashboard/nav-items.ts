@@ -35,7 +35,7 @@ export const primaryNav: NavItem[] = [
 
 export const secondaryNav: NavItem[] = [
   { id: "reports", label: "Reports", href: "/reports", icon: IconChart },
-  { id: "roles", label: "Team & Roles", href: "#", icon: IconShield },
+  { id: "roles", label: "Team & Roles", href: "/team", icon: IconShield },
   { id: "settings", label: "Settings", href: "/settings", icon: IconSliders },
 ];
 
