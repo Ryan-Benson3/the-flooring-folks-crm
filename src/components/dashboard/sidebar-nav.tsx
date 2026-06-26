@@ -11,12 +11,14 @@ import {
 
 function NavRow({
   item,
+  activeNavId = ACTIVE_NAV_ID,
   onNavigate,
 }: {
   item: NavItem;
+  activeNavId?: string;
   onNavigate?: () => void;
 }) {
-  const active = item.id === ACTIVE_NAV_ID;
+  const active = item.id === activeNavId;
   const Icon = item.icon;
   return (
     <Link
@@ -59,17 +61,33 @@ function NavRow({
   );
 }
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({
+  activeNavId = ACTIVE_NAV_ID,
+  onNavigate,
+}: {
+  activeNavId?: string;
+  onNavigate?: () => void;
+}) {
   return (
     <nav aria-label="Primary" className="flex flex-col gap-1">
       {primaryNav.map((item) => (
-        <NavRow key={item.id} item={item} onNavigate={onNavigate} />
+        <NavRow
+          key={item.id}
+          item={item}
+          activeNavId={activeNavId}
+          onNavigate={onNavigate}
+        />
       ))}
       <p className="px-3 pb-1 pt-5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-ink-500">
         Manage
       </p>
       {secondaryNav.map((item) => (
-        <NavRow key={item.id} item={item} onNavigate={onNavigate} />
+        <NavRow
+          key={item.id}
+          item={item}
+          activeNavId={activeNavId}
+          onNavigate={onNavigate}
+        />
       ))}
     </nav>
   );

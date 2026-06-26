@@ -23,7 +23,7 @@ export type NavItem = {
 };
 
 export const primaryNav: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", href: "#", icon: IconGrid },
+  { id: "dashboard", label: "Dashboard", href: "/", icon: IconGrid },
   { id: "jobs", label: "Jobs", href: "#", icon: IconWrench, badge: 3 },
   { id: "customers", label: "Customers", href: "#", icon: IconUsers },
   { id: "estimates", label: "Estimates", href: "#", icon: IconClipboard, badge: 1 },
@@ -36,7 +36,7 @@ export const primaryNav: NavItem[] = [
 export const secondaryNav: NavItem[] = [
   { id: "reports", label: "Reports", href: "#", icon: IconChart },
   { id: "roles", label: "Team & Roles", href: "#", icon: IconShield },
-  { id: "settings", label: "Settings", href: "#", icon: IconSliders },
+  { id: "settings", label: "Settings", href: "/settings", icon: IconSliders },
 ];
 
 export const ACTIVE_NAV_ID = "dashboard";

@@ -9,11 +9,11 @@ import {
 } from "./icons";
 import { Button, IconButton } from "./ui";
 
-export function TopBar() {
+export function TopBar({ activeNavId }: { activeNavId?: string }) {
   return (
     <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-ink-900/80 backdrop-blur-md">
       <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
-        <MobileNav />
+        <MobileNav activeNavId={activeNavId} />
 
         {/* Search */}
         <label className="relative hidden flex-1 max-w-md items-center md:flex">

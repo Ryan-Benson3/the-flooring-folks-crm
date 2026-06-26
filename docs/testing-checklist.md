@@ -147,3 +147,37 @@ Using sample data, confirm the dashboard shell:
 - [ ] Expense category visual sums to the expense total.
 - [ ] Quick actions link to plausible targets.
 - [ ] No console errors on load (dev tools).
+
+## 10. Phase 2 — Settings manual QA
+
+Settings is UI-only in Phase 2 (no live persistence). Verify it looks premium, works on
+every breakpoint, and makes honest claims.
+
+### Route & section coverage
+- [ ] `/settings` renders the business-profile section (name, address, phone, email, tax rate).
+- [ ] `/settings/branding` renders brand-mark placeholder + color/theme token controls.
+- [ ] `/settings/invoice-defaults` renders terms, numbering scheme, default tax.
+- [ ] `/settings/estimate-defaults` renders notes + labor/material markup defaults.
+- [ ] `/settings/workflow` renders job statuses, line-item templates, default currency.
+- [ ] `/settings/payment-expense` renders payment methods + expense categories.
+- [ ] `/settings/account` renders the signed-in user's own profile/preferences.
+
+### Editable-looking behavior
+- [ ] Inputs are pre-filled from sample org data (no empty-looking forms).
+- [ ] Controls look interactive (focus rings, hover) but are clearly demo state.
+- [ ] UI copy is honest — no "saved"/"synced" claims that imply live persistence.
+
+### Branding propagation
+- [ ] Brand color/logo tokens visibly affect the dashboard/UI shell where wired.
+- [ ] Falling back to defaults does not break layout or contrast.
+
+### Responsive & visual QA
+- [ ] Desktop (1024px, 1440px): settings layout, spacing, and hierarchy look premium.
+- [ ] Tablet (768px): sections stack cleanly.
+- [ ] Mobile (360px, 390px): no horizontal scroll; tap targets ≥ 44px; nav back to dashboard.
+- [ ] Premium navy/charcoal + warm wood palette — no generic SaaS blue.
+
+### Browser & build
+- [ ] Chrome, Safari (iOS), and Firefox render correctly.
+- [ ] DevTools console shows **0 errors** on load and when toggling sections.
+- [ ] `pnpm lint` passes; `pnpm build` completes with no type errors.

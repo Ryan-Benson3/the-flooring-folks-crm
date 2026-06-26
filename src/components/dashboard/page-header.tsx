@@ -17,7 +17,7 @@ export function PageHeader() {
             Good morning, {currentUser.name.split(" ")[0]}.
           </h1>
           <p className="mt-1.5 max-w-xl text-sm text-ink-400">
-            {organization.name} is up <span className="font-semibold text-sage-300">12.4%</span>{" "}
+            {organization.name} is up <span className="font-semibold text-sage-300">12.4% </span>
             in revenue this month. Two invoices need a nudge and three receipts
             are waiting on review.
           </p>

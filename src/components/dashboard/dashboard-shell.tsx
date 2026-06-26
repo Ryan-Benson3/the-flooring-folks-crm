@@ -4,7 +4,13 @@ import { SidebarNav } from "./sidebar-nav";
 import { TopBar } from "./top-bar";
 import { currentUser, organization } from "./data";
 
-export function DashboardShell({ children }: { children: ReactNode }) {
+export function DashboardShell({
+  activeNavId,
+  children,
+}: {
+  activeNavId?: string;
+  children: ReactNode;
+}) {
   return (
     <div className="lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
       {/* Desktop sidebar */}
@@ -13,7 +19,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           <Brand />
         </div>
         <div className="flex-1 overflow-y-auto px-3 pb-4">
-          <SidebarNav />
+          <SidebarNav activeNavId={activeNavId} />
         </div>
         <div className="border-t border-white/[0.06] px-4 py-4">
           <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-3">
@@ -34,7 +40,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
       {/* Main column */}
       <div className="flex min-h-screen flex-col">
-        <TopBar />
+        <TopBar activeNavId={activeNavId} />
         <main className="flex-1">
           <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:py-8">
             {children}

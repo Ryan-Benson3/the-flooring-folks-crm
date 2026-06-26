@@ -117,6 +117,16 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   cancelled: "Cancelled",
 };
 
+/** Chip/accent colors (hex) for job-status badges. Tuned for the navy cockpit. */
+export const JOB_STATUS_COLORS: Record<JobStatus, string> = {
+  lead: "#64748b",
+  scheduled: "#2563eb",
+  in_progress: "#d97706",
+  completed: "#16a34a",
+  on_hold: "#71717a",
+  cancelled: "#dc2626",
+};
+
 export const ESTIMATE_STATUS_LABELS: Record<EstimateStatus, string> = {
   draft: "Draft",
   sent: "Sent",
@@ -154,6 +164,28 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   other: "Other",
 };
 
+/** Units a {@link LineItemTemplate} (and most line items) can be priced in. */
+export const LINE_ITEM_UNITS = [
+  "each",
+  "hour",
+  "day",
+  "sq_ft",
+  "sq_yd",
+  "linear_ft",
+  "lump_sum",
+] as const;
+export type LineItemUnit = (typeof LINE_ITEM_UNITS)[number];
+
+export const LINE_ITEM_UNIT_LABELS: Record<LineItemUnit, string> = {
+  each: "each",
+  hour: "hour",
+  day: "day",
+  sq_ft: "sq ft",
+  sq_yd: "sq yd",
+  linear_ft: "linear ft",
+  lump_sum: "lump sum",
+};
+
 // ---------------------------------------------------------------------------
 // Core domain models
 // ---------------------------------------------------------------------------
@@ -183,19 +215,142 @@ export interface Profile {
   createdAt: ISODateString;
 }
 
+// ---------------------------------------------------------------------------
+// Business settings, branding & customizable picklists
+// ---------------------------------------------------------------------------
+//
+// SQL table: public.organization_settings (1:1 with organizations), plus the
+// child picklist tables organization_expense_categories,
+// organization_job_statuses, organization_payment_methods, and
+// organization_line_item_templates. The TS aggregate nests the picklists for
+// ergonomic display; the data layer normalizes them into those tables so RLS
+// and per-row maintenance stay simple. Every row is org-scoped.
+
+/** Structured postal/mailing address. Assemble for display via {@link formatAddress}. */
+export interface PostalAddress {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  /** State / province / region. */
+  region?: string;
+  /** ZIP / postal code. */
+  postalCode?: string;
+  /** ISO 3166-1 country code, e.g. "US". */
+  country?: string;
+}
+
+/** Branding tokens that feed the app chrome, PDFs, and customer portal. */
+export interface BrandSettings {
+  /** Primary brand color (hex). Drives accents, buttons, charts. */
+  primaryColor?: string;
+  /** Secondary accent color (hex) for highlights and badges. */
+  accentColor?: string;
+  /** Supabase Storage path to the full logo (PNG/SVG). Preferred source. */
+  logoStoragePath?: string;
+  /** Optional public/CDN logo URL; overrides logoStoragePath when set. */
+  logoUrl?: string;
+  /** Small square brand mark / icon for favicons + document watermarks. */
+  brandMarkStoragePath?: string;
+}
+
+/** Sequential numbering scheme for estimates and invoices. */
+export interface DocumentNumbering {
+  /** Prefix prepended to every number, e.g. "INV". */
+  prefix: string;
+  /** Next integer to assign when a document is created. */
+  nextNumber: number;
+  /** Zero-pad the numeric portion to this width, e.g. 4 -> "1042". */
+  numberPadding: number;
+}
+
+/**
+ * One entry in a tenant-customizable picklist (expense categories, job
+ * statuses, payment methods). System entries are seeded from the domain enums
+ * and keep their `value` so existing records/constraints stay valid; tenants
+ * may relabel, reorder, disable, or add their own non-system entries.
+ */
+export interface ListOption {
+  /** Stable key. Equals the domain enum value for system options. */
+  value: string;
+  /** Human label rendered in selectors and chips. */
+  label: string;
+  /** 0-based display order. */
+  position: number;
+  /** Hidden from new selectors when false, but retained for history. */
+  enabled: boolean;
+  /** True when seeded from a system enum (not tenant-created). */
+  system: boolean;
+  /** Optional hex accent for status chips, e.g. "#16a34a". */
+  color?: string;
+}
+
 export interface BusinessSettings {
   organizationId: string;
-  currency: string; // ISO 4217, e.g. "USD"
-  taxRatePct: number; // default sales-tax % applied to estimates/invoices
-  invoicePrefix: string;
-  invoiceNextNumber: number;
-  estimatePrefix: string;
-  estimateNextNumber: number;
+
+  // --- Identity & legal ---
+  /** Trading / display name (mirrors Organization.name; editable here). */
+  displayName: string;
+  /** Legal entity name for invoices, contracts, and 1099s. */
   legalName?: string;
-  address?: string;
-  phone?: string;
+  /** Public website. */
+  website?: string;
+
+  // --- Contact ---
+  /** General contact email printed on documents. */
   email?: string;
-  brandColor?: string;
+  /** General contact phone printed on documents. */
+  phone?: string;
+
+  // --- Address (structured for mailing + maps) ---
+  address: PostalAddress;
+
+  // --- Branding ---
+  brand: BrandSettings;
+
+  // --- Money & tax defaults ---
+  /** ISO 4217 currency applied to estimates/invoices/expenses, e.g. "USD". */
+  currency: string;
+  /** Default sales-tax % applied to new estimates/invoices. */
+  taxRatePct: number;
+
+  // --- Document defaults ---
+  /** Default terms printed on invoices (e.g. "Net 15"). */
+  invoiceTerms?: string;
+  /** Default notes pre-filled on new estimates. */
+  estimateNotes?: string;
+  invoiceNumbering: DocumentNumbering;
+  estimateNumbering: DocumentNumbering;
+
+  // --- Customizable picklists (mirror the SQL child tables) ---
+  expenseCategories: ListOption[];
+  jobStatuses: ListOption[];
+  paymentMethods: ListOption[];
+
+  updatedAt: ISODateString;
+}
+
+/**
+ * A reusable catalog line a flooring crew drops onto estimates/invoices (and
+ * optionally expenses), e.g. "LVP install — per sq ft". Tenant-scoped.
+ */
+export interface LineItemTemplate {
+  id: string;
+  organizationId: string;
+  /** Short label shown in the template picker. */
+  name: string;
+  /** Default description copied onto the line item. */
+  description: string;
+  unit: LineItemUnit;
+  defaultQuantity: number;
+  defaultUnitPriceCents: number;
+  /** Optional rollup category when used as an expense line. */
+  category?: ExpenseCategory;
+  /** True when the template can also seed an expense (not just a sale line). */
+  isExpense?: boolean;
+  position: number;
+  archivedAt?: ISODateString;
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
 }
 
 export interface Customer {
@@ -528,6 +683,109 @@ export function formatPhone(phone?: string): string | undefined {
     return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
   }
   return phone;
+}
+
+// ---------------------------------------------------------------------------
+// Business settings & branding helpers
+// ---------------------------------------------------------------------------
+
+/** True for a well-formed 6-digit hex color, e.g. "#0f766e". */
+export function isHexColor(value?: string): boolean {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
+}
+
+/**
+ * Assembles a {@link PostalAddress} for display. Defaults to a single comma
+ * line ("418 Maple Ridge Rd, Suite B, Marietta, GA 30060"); pass
+ * `{ singleLine: false }` for a two-line mailing layout. Empty addresses yield
+ * `undefined`.
+ */
+export function formatAddress(
+  address?: PostalAddress,
+  opts: { singleLine?: boolean } = {},
+): string | undefined {
+  if (!address) return undefined;
+  const street = [address.line1, address.line2].filter(Boolean).join(", ");
+  const locality = [
+    address.city,
+    [address.region, address.postalCode].filter(Boolean).join(" "),
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const country =
+    address.country && address.country.toUpperCase() !== "US"
+      ? address.country
+      : "";
+  const parts = [street, locality, country].filter(Boolean);
+  const sep = opts.singleLine === false ? "\n" : ", ";
+  return parts.join(sep) || undefined;
+}
+
+/** Formats a document number with zero padding: ("INV", 1042, 4) -> "INV-1042". */
+export function formatDocumentNumber(
+  prefix: string,
+  number: number,
+  padding = 4,
+): string {
+  const safePrefix = (prefix ?? "").trim();
+  const safeNumber =
+    Number.isFinite(number) && number > 0 ? Math.floor(number) : 0;
+  const width = padding > 0 ? Math.min(padding, 12) : 0;
+  const numStr =
+    width > 0 ? String(safeNumber).padStart(width, "0") : String(safeNumber);
+  return safePrefix ? `${safePrefix}-${numStr}` : numStr;
+}
+
+/** The human number the *next* document of this kind will receive. */
+export function nextDocumentNumber(
+  numbering: Pick<DocumentNumbering, "prefix" | "nextNumber" | "numberPadding">,
+): string {
+  return formatDocumentNumber(
+    numbering.prefix,
+    numbering.nextNumber,
+    numbering.numberPadding,
+  );
+}
+
+/** Effective business name: legal name when set, otherwise display name. */
+export function businessDisplayName(
+  settings: Pick<BusinessSettings, "displayName" | "legalName">,
+): string {
+  return (settings.legalName ?? "").trim() || settings.displayName;
+}
+
+/** Default expense-category picklist, seeded from the system enum. */
+export function defaultExpenseCategoryOptions(): ListOption[] {
+  return EXPENSE_CATEGORIES.map((value, i) => ({
+    value,
+    label: EXPENSE_CATEGORY_LABELS[value],
+    position: i,
+    enabled: true,
+    system: true,
+  }));
+}
+
+/** Default job-status picklist (with chip colors), seeded from the system enum. */
+export function defaultJobStatusOptions(): ListOption[] {
+  return JOB_STATUSES.map((value, i) => ({
+    value,
+    label: JOB_STATUS_LABELS[value],
+    position: i,
+    enabled: true,
+    system: true,
+    color: JOB_STATUS_COLORS[value],
+  }));
+}
+
+/** Default payment-method picklist, seeded from the system enum. */
+export function defaultPaymentMethodOptions(): ListOption[] {
+  return PAYMENT_METHODS.map((value, i) => ({
+    value,
+    label: PAYMENT_METHOD_LABELS[value],
+    position: i,
+    enabled: true,
+    system: true,
+  }));
 }
 
 // ---------------------------------------------------------------------------

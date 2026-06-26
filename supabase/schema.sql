@@ -91,21 +91,96 @@ create table if not exists public.organization_members (
   unique (organization_id, profile_id)
 );
 
--- One row per organization.
-create table if not exists public.business_settings (
-  organization_id     uuid primary key references public.organizations(id) on delete cascade,
-  currency            text not null default 'USD',
-  tax_rate_pct        numeric(5,2) not null default 0,
-  invoice_prefix      text not null default 'INV',
-  invoice_next_number integer not null default 1001,
-  estimate_prefix     text not null default 'EST',
-  estimate_next_number integer not null default 1001,
-  legal_name          text,
-  address             text,
-  phone               text,
-  email               text,
-  brand_color         text,
-  updated_at          timestamptz not null default now()
+-- One row per organization. Phase 2 settings are modeled as real schema now,
+-- even though the app still renders sample-backed preview fields until auth/persistence lands.
+create table if not exists public.organization_settings (
+  organization_id          uuid primary key references public.organizations(id) on delete cascade,
+  display_name             text not null,
+  legal_name               text,
+  website                  text,
+  email                    text,
+  phone                    text,
+  address_line1            text,
+  address_line2            text,
+  address_city             text,
+  address_region           text,
+  address_postal_code      text,
+  address_country          text not null default 'US',
+  primary_color            text default '#d99a48',
+  accent_color             text default '#6fb386',
+  logo_storage_path        text,
+  brand_mark_storage_path  text,
+  currency                 text not null default 'USD',
+  tax_rate_pct             numeric(5,2) not null default 0,
+  invoice_prefix           text not null default 'INV',
+  invoice_next_number      integer not null default 1001,
+  invoice_number_padding   integer not null default 4,
+  invoice_terms            text,
+  estimate_prefix          text not null default 'EST',
+  estimate_next_number     integer not null default 1001,
+  estimate_number_padding  integer not null default 4,
+  estimate_notes           text,
+  updated_at               timestamptz not null default now()
+);
+
+-- Backward-compatible view name for early docs/code that referenced business_settings.
+create or replace view public.business_settings as
+  select * from public.organization_settings;
+
+create table if not exists public.organization_expense_categories (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  value           text not null,
+  label           text not null,
+  position        integer not null default 0,
+  enabled         boolean not null default true,
+  system          boolean not null default false,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  unique (organization_id, value)
+);
+
+create table if not exists public.organization_job_statuses (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  value           text not null,
+  label           text not null,
+  color           text,
+  position        integer not null default 0,
+  enabled         boolean not null default true,
+  system          boolean not null default false,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  unique (organization_id, value)
+);
+
+create table if not exists public.organization_payment_methods (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  value           text not null,
+  label           text not null,
+  position        integer not null default 0,
+  enabled         boolean not null default true,
+  system          boolean not null default false,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  unique (organization_id, value)
+);
+
+create table if not exists public.organization_line_item_templates (
+  id                       uuid primary key default gen_random_uuid(),
+  organization_id          uuid not null references public.organizations(id) on delete cascade,
+  name                     text not null,
+  description              text not null,
+  unit                     text not null,
+  default_quantity         numeric(12,2) not null default 1,
+  default_unit_price_cents bigint not null default 0 check (default_unit_price_cents >= 0),
+  category                 expense_category,
+  is_expense               boolean not null default false,
+  position                 integer not null default 0,
+  archived_at              timestamptz,
+  created_at               timestamptz not null default now(),
+  updated_at               timestamptz not null default now()
 );
 
 -- =============================================================================
@@ -319,6 +394,11 @@ create index if not exists idx_organization_members_org
   on public.organization_members (organization_id);
 create index if not exists idx_organization_members_profile
   on public.organization_members (profile_id);
+create index if not exists idx_organization_settings_org on public.organization_settings (organization_id);
+create index if not exists idx_org_expense_categories_org on public.organization_expense_categories (organization_id, position);
+create index if not exists idx_org_job_statuses_org on public.organization_job_statuses (organization_id, position);
+create index if not exists idx_org_payment_methods_org on public.organization_payment_methods (organization_id, position);
+create index if not exists idx_org_line_item_templates_org on public.organization_line_item_templates (organization_id, position);
 
 -- Tenant scoping: the single most-used predicate is `organization_id = ?`.
 create index if not exists idx_customers_org on public.customers (organization_id);
@@ -358,7 +438,9 @@ do $$
 declare
   t text;
   mutable text[] := array[
-    'profiles','organizations','organization_members','business_settings',
+    'profiles','organizations','organization_members','organization_settings',
+    'organization_expense_categories','organization_job_statuses',
+    'organization_payment_methods','organization_line_item_templates',
     'customers','jobs','expenses','receipts','estimates','invoices',
     'files','support_access_grants'
   ];
@@ -392,7 +474,11 @@ end $$;
 alter table public.profiles enable row level security;
 alter table public.organizations enable row level security;
 alter table public.organization_members enable row level security;
-alter table public.business_settings enable row level security;
+alter table public.organization_settings enable row level security;
+alter table public.organization_expense_categories enable row level security;
+alter table public.organization_job_statuses enable row level security;
+alter table public.organization_payment_methods enable row level security;
+alter table public.organization_line_item_templates enable row level security;
 alter table public.customers enable row level security;
 alter table public.jobs enable row level security;
 alter table public.expenses enable row level security;
@@ -440,10 +526,10 @@ create policy "orgs_member_read"
 
 -- Read/update organization settings if you are a member.
 create policy "settings_member_read"
-  on public.business_settings for select
+  on public.organization_settings for select
   using (public.is_org_member(organization_id));
 create policy "settings_member_update"
-  on public.business_settings for update
+  on public.organization_settings for update
   using (public.is_org_member(organization_id))
   with check (public.is_org_member(organization_id));
 
@@ -480,6 +566,8 @@ do $$
 declare
   t text;
   tenant_tables text[] := array[
+    'organization_expense_categories','organization_job_statuses',
+    'organization_payment_methods','organization_line_item_templates',
     'customers','jobs','expenses','receipts','estimates','estimate_items',
     'invoices','invoice_items','payments','files','activity_log',
     'support_access_grants'
@@ -500,7 +588,7 @@ end $$;
 -- =============================================================================
 -- TODO (post-Phase-1, intentionally out of scope here)
 -- -----------------------------------------------------------------------------
--- * INSERT trigger to bump business_settings.invoice_next_number /
+-- * INSERT trigger to bump organization_settings.invoice_next_number /
 --   estimate_next_number and stamp human-readable numbers.
 -- * Computed/denormalized invoice subtotal_cents / tax_cents / total_cents with
 --   a trigger that re-sums invoice_items on change.

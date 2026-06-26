@@ -6,7 +6,7 @@ import { IconClose, IconMenu } from "./icons";
 import { SidebarNav } from "./sidebar-nav";
 import { IconButton } from "./ui";
 
-export function MobileNav() {
+export function MobileNav({ activeNavId }: { activeNavId?: string }) {
   const [open, setOpen] = useState(false);
 
   // Lock body scroll while the drawer is open.
@@ -50,7 +50,7 @@ export function MobileNav() {
               </IconButton>
             </div>
             <div className="flex-1 overflow-y-auto px-3 py-4">
-              <SidebarNav onNavigate={() => setOpen(false)} />
+              <SidebarNav activeNavId={activeNavId} onNavigate={() => setOpen(false)} />
             </div>
           </div>
         </div>

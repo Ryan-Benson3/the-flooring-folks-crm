@@ -1,8 +1,7 @@
 # Build Roadmap
 
 The Flooring Folks CRM is built in phases. Each phase has a clear goal, deliverables,
-dependencies, and exit criteria. **Phase 1 (Foundation) is in progress.** Later phases are
-planned but not started.
+dependencies, and exit criteria. Phase 1 (Foundation) is complete and locally verified; **Phase 2 (Business Settings) is in progress.** Later phases remain planned.
 
 > Architectural guardrails apply to every phase:
 > - Multi-tenant from day one — every tenant record carries `organization_id`.
@@ -17,8 +16,8 @@ planned but not started.
 
 | #  | Phase                  | Status        | Depends on            |
 | -- | ---------------------- | ------------- | --------------------- |
-| 1  | Foundation             | 🚧 In progress | —                     |
-| 2  | Business Settings      | Planned       | 1                     |
+| 1  | Foundation             | ✅ Complete      | —                     |
+| 2  | Business Settings      | 🚧 In progress   | 1                     |
 | 3  | Customers              | Planned       | 1                     |
 | 4  | Jobs                   | Planned       | 3                     |
 | 5  | Files & Photos         | Planned       | 4                     |
@@ -40,7 +39,7 @@ planned but not started.
 
 ---
 
-## Phase 1 — Foundation 🚧
+## Phase 1 — Foundation ✅
 
 **Goal:** Establish the app scaffold, multi-tenant domain model, database schema draft,
 sample data, and a premium dashboard UI shell so every later phase has solid ground.
@@ -67,18 +66,60 @@ sample data, and a premium dashboard UI shell so every later phase has solid gro
 
 ---
 
-## Phase 2 — Business Settings
+## Phase 2 — Business Settings 🚧
 
-**Goal:** Let an organization configure its identity, defaults, and branding.
+**Goal:** Let The Flooring Folks make the cockpit look and read like *their* business —
+identity, branding, and module defaults — with editable-looking sections now and live
+persistence later.
+
+**Scope (this phase).** Phase 2 ships the **UI and form sections** for business settings.
+It does **not** wire live Supabase auth or persistence yet: values are seeded from sample
+data and stay demo-only until a later phase connects the database. This keeps the settings
+surface real and reviewable without faking a working backend.
 
 **Deliverables**
 
-- Business profile (name, logo, address, phone, email, tax rate).
-- Default currency, labor/material markup defaults, estimate/invoice numbering scheme.
-- Branding tokens feeding PDFs and portal.
-- Profile / account page for the signed-in user.
+- Business profile — name, address, phone, email, tax rate.
+- Brand — logo/brand-mark placeholder, colors & theme tokens (feed PDFs + portal later).
+- Invoice defaults — terms, numbering scheme, default tax.
+- Estimate defaults — notes, labor/material markup defaults.
+- Workflow defaults — job statuses, line-item templates, default currency.
+- Payment & expense defaults — payment methods, expense categories.
+- Self-service `/settings/account` — own profile / preferences (read-mostly).
+- Settings route/page shell under the `(app)` route group (see
+  `docs/routes-and-permissions.md`).
 
-**Depends on:** 1. **Exit:** settings persist per org and surface in estimates/invoices later.
+**Phase 2 checklist**
+
+- [ ] `/settings` + sub-routes render (profile, brand, invoice/estimate defaults, workflow,
+      payment/expense, account).
+- [ ] Each section shows editable-looking inputs pre-filled from sample org data.
+- [ ] Branding tokens visibly affect the dashboard/UI shell where wired.
+- [ ] Mobile layout is clean (no horizontal scroll); nav returns to the dashboard.
+- [ ] UI copy is honest — no "saved"/"synced" wording that implies live persistence.
+- [ ] `pnpm lint` and `pnpm build` pass.
+- [ ] Browser QA: 0 console errors; desktop + mobile visual check.
+
+**Depends on:** Phase 1.
+
+**Exit criteria**
+
+- All Phase 2 settings sections render on mobile and desktop with sample-backed data.
+- Branding tokens are wired into at least the dashboard/UI shell.
+- `pnpm lint` and `pnpm build` pass with 0 console errors.
+- Docs (roadmap, routes/permissions, testing checklist) reflect Phase 2 scope.
+- **No live Supabase persistence is claimed or shipped** — persistence is explicitly a
+  later-phase item.
+
+**Explicitly NOT in Phase 2:** live Supabase auth/DB writes, Stripe, OCR, and team
+invites/role enforcement. Settings do not yet persist across sessions or devices.
+
+**Next recommended phase → Phase 3 (Customers).** Customers are referenced by every job,
+estimate, and invoice, so they unblock the most downstream modules. Before building
+Customers, stand up a small auth/persistence prerequisite — Supabase auth (org-scoped
+session) plus an `organization_settings` table with RLS — so Phase 2 settings save to real
+per-org rows instead of staying demo-only. That same prerequisite makes Phase 3 immediately
+useful (real customers persist) rather than stacking more sample-data-only screens.
 
 ---
 

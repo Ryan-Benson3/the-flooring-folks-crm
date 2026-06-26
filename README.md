@@ -7,9 +7,11 @@ It is **not** a QuickBooks clone. The focus is job operations, customers, estima
 invoices, expenses/receipts, files/photos, simple profit visibility, and clean exports —
 the day-to-day cockpit a flooring crew actually opens every morning.
 
-> **Status:** Phase 1 — Foundation. The app scaffold, multi-tenant domain model,
-> database schema draft, sample data, and a premium dashboard UI shell are in progress.
-> See [`docs/build-roadmap.md`](docs/build-roadmap.md) for the full plan.
+> **Status:** Phase 1 (Foundation) complete and verified. **Phase 2 (Business Settings) is
+> in progress** — an editable-looking `/settings` surface for business profile, branding,
+> invoice/estimate defaults, workflow defaults, and payment/expense defaults. Settings are
+> UI-only this phase; live Supabase persistence comes later. See
+> [`docs/build-roadmap.md`](docs/build-roadmap.md) for the full plan.
 
 ---
 
@@ -98,6 +100,25 @@ live Supabase auth, Stripe, or OCR.
 
 **Out of scope for Phase 1:** live auth, real DB connection, payments, OCR, customer
 portal, SaaS onboarding. Those are later phases.
+
+## Phase 2 scope (Business Settings)
+
+Phase 2 makes the cockpit look and read like *The Flooring Folks'* business. It ships
+**editable-looking settings sections** seeded from sample data; it does **not** wire live
+Supabase auth or persistence yet.
+
+- **Business profile** — name, address, phone, email, tax rate.
+- **Brand** — logo/brand-mark placeholder, colors & theme tokens.
+- **Invoice defaults** — terms, numbering scheme, default tax.
+- **Estimate defaults** — notes, labor/material markup defaults.
+- **Workflow defaults** — job statuses, line-item templates, default currency.
+- **Payment & expense defaults** — payment methods, expense categories.
+- **Self-service account** — own profile / preferences (`/settings/account`).
+
+Routes and role access live in [`docs/routes-and-permissions.md`](docs/routes-and-permissions.md);
+QA steps in [`docs/testing-checklist.md`](docs/testing-checklist.md). **Next up → Phase 3
+(Customers)**, after standing up Supabase auth + a real `organization_settings` table so
+settings persist per org.
 
 ---
 

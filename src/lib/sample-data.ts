@@ -10,7 +10,13 @@
  * deterministic regardless of when it is rendered.
  */
 
-import { computeDashboardSummary, jobProfit } from "./domain";
+import {
+  computeDashboardSummary,
+  defaultExpenseCategoryOptions,
+  defaultJobStatusOptions,
+  defaultPaymentMethodOptions,
+  jobProfit,
+} from "./domain";
 import type {
   ActivityEntry,
   BusinessSettings,
@@ -21,6 +27,7 @@ import type {
   Invoice,
   Job,
   JobProfit,
+  LineItemTemplate,
   Organization,
   OrganizationMember,
   Payment,
@@ -55,10 +62,10 @@ export const sampleProfiles: Profile[] = [
     createdAt: "2024-02-12T14:00:00.000Z",
   },
   {
-    id: "profile_ryan",
-    firstName: "Ryan",
+    id: "profile_jessica",
+    firstName: "Jessica",
     lastName: "Benson",
-    email: "ryan@theflooringfolks.com",
+    email: "jessica@theflooringfolks.com",
     createdAt: "2024-03-01T14:00:00.000Z",
   },
   {
@@ -79,9 +86,9 @@ export const sampleMembers: OrganizationMember[] = [
     createdAt: "2024-02-12T14:00:00.000Z",
   },
   {
-    id: "member_ryan",
+    id: "member_jessica",
     organizationId: ORG_ID,
-    profileId: "profile_ryan",
+    profileId: "profile_jessica",
     role: "admin",
     createdAt: "2024-03-01T14:00:00.000Z",
   },
@@ -96,18 +103,96 @@ export const sampleMembers: OrganizationMember[] = [
 
 export const sampleBusinessSettings: BusinessSettings = {
   organizationId: ORG_ID,
+  displayName: "The Flooring Folks",
+  legalName: "The Flooring Folks, LLC",
+  website: "https://theflooringfolks.com",
+  email: "hello@theflooringfolks.com",
+  phone: "7705550142",
+  address: {
+    line1: "418 Maple Ridge Rd",
+    line2: "Suite B",
+    city: "Marietta",
+    region: "GA",
+    postalCode: "30060",
+    country: "US",
+  },
+  brand: {
+    primaryColor: "#d99a48",
+    accentColor: "#6fb386",
+    brandMarkStoragePath: "orgs/the-flooring-folks/brand/mark.svg",
+    logoStoragePath: "orgs/the-flooring-folks/brand/logo.svg",
+  },
   currency: "USD",
   taxRatePct: 7,
-  invoicePrefix: "INV",
-  invoiceNextNumber: 1047,
-  estimatePrefix: "EST",
-  estimateNextNumber: 212,
-  legalName: "The Flooring Folks, LLC",
-  address: "418 Maple Ridge Rd, Suite B, Marietta, GA 30060",
-  phone: "7705550142",
-  email: "hello@theflooringfolks.com",
-  brandColor: "#0f766e",
+  invoiceTerms: "Payment due within 15 days unless otherwise noted.",
+  estimateNotes:
+    "Estimate is valid for 14 days. Final pricing may change if hidden subfloor damage is discovered after demo.",
+  invoiceNumbering: {
+    prefix: "INV",
+    nextNumber: 1047,
+    numberPadding: 4,
+  },
+  estimateNumbering: {
+    prefix: "EST",
+    nextNumber: 212,
+    numberPadding: 4,
+  },
+  expenseCategories: [
+    ...defaultExpenseCategoryOptions(),
+    {
+      value: "dump_fees",
+      label: "Dump fees",
+      position: 8,
+      enabled: true,
+      system: false,
+    },
+  ],
+  jobStatuses: defaultJobStatusOptions(),
+  paymentMethods: defaultPaymentMethodOptions(),
+  updatedAt: "2026-06-26T13:00:00.000Z",
 };
+
+export const sampleLineItemTemplates: LineItemTemplate[] = [
+  {
+    id: "template_lvp_install",
+    organizationId: ORG_ID,
+    name: "LVP install",
+    description: "Install luxury vinyl plank flooring, including layout and standard cuts.",
+    unit: "sq_ft",
+    defaultQuantity: 1,
+    defaultUnitPriceCents: 325,
+    category: "labor",
+    position: 0,
+    createdAt: "2026-06-26T13:00:00.000Z",
+    updatedAt: "2026-06-26T13:00:00.000Z",
+  },
+  {
+    id: "template_base_shoe",
+    organizationId: ORG_ID,
+    name: "Base shoe install",
+    description: "Install primed base shoe after flooring install.",
+    unit: "linear_ft",
+    defaultQuantity: 1,
+    defaultUnitPriceCents: 275,
+    category: "materials",
+    position: 1,
+    createdAt: "2026-06-26T13:00:00.000Z",
+    updatedAt: "2026-06-26T13:00:00.000Z",
+  },
+  {
+    id: "template_tile_floor",
+    organizationId: ORG_ID,
+    name: "Tile floor install",
+    description: "Install tile flooring with standard underlayment and grout.",
+    unit: "sq_ft",
+    defaultQuantity: 1,
+    defaultUnitPriceCents: 850,
+    category: "labor",
+    position: 2,
+    createdAt: "2026-06-26T13:00:00.000Z",
+    updatedAt: "2026-06-26T13:00:00.000Z",
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Customers
@@ -996,6 +1081,7 @@ export const sampleData = {
   profiles: sampleProfiles,
   members: sampleMembers,
   businessSettings: sampleBusinessSettings,
+  lineItemTemplates: sampleLineItemTemplates,
   customers: sampleCustomers,
   jobs: sampleJobs,
   estimates: sampleEstimates,

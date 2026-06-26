@@ -119,14 +119,43 @@ Access key: ✓ = allowed · — = denied · (✓) = allowed only within assigne
 
 ## App — Settings
 
-| Route                          | Purpose                          | owner | admin | manager | member | bookkeeper |
-| ------------------------------ | -------------------------------- | :---: | :---: | :-----: | :----: | :--------: |
-| `/settings`                    | Business profile & defaults      |   ✓   |   ✓   |    —    |   —    |     —      |
-| `/settings/team`               | Members & invites                |   ✓   |   ✓   |    —    |   —    |     —      |
-| `/settings/roles`              | Role assignments                 |   ✓   |   —   |    —    |   —    |     —      |
-| `/settings/integrations`       | Stripe, OCR/AI connections       |   ✓   |   —   |    —    |   —    |     —      |
-| `/settings/billing`            | SaaS plan & invoices (tenant)    |   ✓   |   —   |    —    |   —    |     —      |
-| `/settings/account`            | Own profile / preferences        |   ✓   |   ✓   |    ✓    |   ✓    |     ✓      |
+`/settings` is the business-settings hub. In Phase 2 it surfaces an **editable-looking**
+business profile, branding, and module defaults so the cockpit reads like *The Flooring
+Folks'* own. Phase 2 ships the **form sections only** — values are seeded from sample data
+and **persistence is wired in a later phase** once Supabase auth is active (see
+`docs/build-roadmap.md`). Editing is restricted to org owners/admins; everyone else is
+denied except their own `/settings/account`.
+
+> Convention: `/settings` and its sub-routes live under the `(app)` route group and require
+> an authenticated, org-scoped session. Every tenant query filters by `organization_id`.
+
+### Business settings (Phase 2)
+
+| Route                            | Purpose                                              | owner | admin | manager | member | bookkeeper |
+| -------------------------------- | ---------------------------------------------------- | :---: | :---: | :-----: | :----: | :--------: |
+| `/settings`                      | Business profile (name, address, phone, email, tax rate) |   ✓   |   ✓   |    —    |   —    |     —      |
+| `/settings/branding`             | Brand mark/logo placeholder, colors & theme tokens   |   ✓   |   ✓   |    —    |   —    |     —      |
+| `/settings/invoice-defaults`     | Invoice terms, numbering scheme, default tax         |   ✓   |   ✓   |    —    |   —    |     —      |
+| `/settings/estimate-defaults`    | Estimate notes, labor/material markup defaults       |   ✓   |   ✓   |    —    |   —    |     —      |
+| `/settings/workflow`             | Job statuses, line-item templates, default currency  |   ✓   |   ✓   |    —    |   —    |     —      |
+| `/settings/payment-expense`      | Payment methods, expense categories                  |   ✓   |   ✓   |    —    |   —    |     —      |
+
+> Phase 2 = editable-looking sections only; **not yet persisted to Supabase.** Branding
+> tokens feed PDFs and the customer portal once those phases land.
+
+### Admin settings (later phases)
+
+| Route                          | Purpose                          | owner | admin | manager | member | bookkeeper | Phase |
+| ------------------------------ | -------------------------------- | :---: | :---: | :-----: | :----: | :--------: | :---: |
+| `/settings/team`               | Members & invites                |   ✓   |   ✓   |    —    |   —    |     —      |  13   |
+| `/settings/roles`              | Role assignments                 |   ✓   |   —   |    —    |   —    |     —      |  13   |
+| `/settings/integrations`       | Stripe, OCR/AI connections       |   ✓   |   —   |    —    |   —    |     —      | 15/18 |
+| `/settings/billing`            | SaaS plan & invoices (tenant)    |   ✓   |   —   |    —    |   —    |     —      |  16   |
+| `/settings/account`            | Own profile / preferences        |   ✓   |   ✓   |    ✓    |   ✓    |     ✓      |  2*   |
+
+> Note: `/settings/account` (own profile/preferences) is read-mostly and open to every
+> signed-in user. Self-service edits (display name, avatar) can ship in Phase 2 as a
+> low-risk editable-looking section; password/auth changes follow auth wiring.
 
 ---
 
