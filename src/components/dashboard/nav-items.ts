@@ -28,8 +28,8 @@ export const primaryNav: NavItem[] = [
   { id: "customers", label: "Customers", href: "/customers", icon: IconUsers },
   { id: "estimates", label: "Estimates", href: "/estimates", icon: IconClipboard, badge: 1 },
   { id: "invoices", label: "Invoices", href: "/invoices", icon: IconInvoice },
-  { id: "receipts", label: "Receipts", href: "#", icon: IconScan, badge: 3 },
-  { id: "expenses", label: "Expenses", href: "#", icon: IconDollar },
+  { id: "receipts", label: "Receipts", href: "/receipts", icon: IconScan, badge: 3 },
+  { id: "expenses", label: "Expenses", href: "/expenses", icon: IconDollar },
   { id: "files", label: "Files & Photos", href: "#", icon: IconFolder },
 ];
 
